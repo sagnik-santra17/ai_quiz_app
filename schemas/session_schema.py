@@ -22,14 +22,14 @@ class SessionResponse(BaseModel):
     started_at: datetime
 
 
-class WeakPoint(BaseModel):
+class WeakPoint(BaseModel): # -> For the wrong answers and AI suggestions for the player's weak points
     model_config = ConfigDict(from_attributes=True)
     topic: Topics
     missed: int
     total: int
 
 
-class SessionResult(BaseModel):
+class SessionResult(BaseModel): # -> For the ulitmate result that will be shown at the end of the quiz
     session_id: uuid.UUID
     player_name: str
     level: Levels
