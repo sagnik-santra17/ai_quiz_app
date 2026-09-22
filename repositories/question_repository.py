@@ -15,6 +15,7 @@ class QuestionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+
     # Getting a question with its question ID
     async def get_question_by_id(self, question_id: uuid.UUID) -> Question | None:
         logger.info(f"Database: Attempting to find a question with question id: {question_id}")
