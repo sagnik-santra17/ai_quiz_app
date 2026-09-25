@@ -33,7 +33,9 @@ class QuestionRepository:
 
     # Return how many questions are available with a topic and level combo
     async def count_by_topic_level(self, topic: Topics, level: Levels) -> int:
-        logger.info(f"Database: Counting how many questions are available with this topic and level combo: {topic} + {level}")
+        logger.info(
+            f"Database: Counting how many questions are available with this topic and level combo: {topic} + {level}"
+        )
         query = (
             select(func.count(Question.question_id))
             .where(
@@ -45,13 +47,17 @@ class QuestionRepository:
         )
         results = await self.db.execute(query)
         total_questions = results.scalar_one()
-        logger.info(f"Database: {total_questions} questions are available with this topic and level combo: {topic} + {level}")
+        logger.info(
+            f"Database: {total_questions} questions are available with this topic and level combo: {topic} + {level}"
+        )
         return total_questions
     
 
     # Excludes the already asked questions and returns a unique question
     async def get_random_excluding(self, topic: Topics, level: Levels, exclude_ids: list[uuid.UUID]) -> Question | None:
-        logger.info(f"Database: Excluding questions that are already asked based on this combo: {topic} + {level}")
+        logger.info(
+            f"Database: Excluding questions that are already asked based on this combo: {topic} + {level}"
+        )
 
         # Filter the topic + level questions
         query = (
