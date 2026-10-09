@@ -141,20 +141,41 @@ class QuizService:
         )
 
 
-"""    # Ending the session
+    # Ending the session
     async def end_session(self, session_id: uuid.UUID) -> SessionResult:
-        logger.info(f"Service: Attemmpting to end the session with session id: {session_id}")
+        logger.info(f"QuizService: Attempting to end session: {session_id}")
 
+        # Fetch session by ID directly (avoiding helper methods that block ended sessions)
         session = await self.session_repo.get_session_by_id(session_id=session_id)
         if not session:
+            logger.warning(f"QuizService: End session failed. Session {session_id} not found.")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found"
+                detail="Session doesn't exist"
             )
 
-        ending_session = await self.session_repo.mark_ended_session(session_id=session_id)
+        # Check current state to handle retries and post-failure recoveries idempotently
+        if session.ended_at is not None:
+            logger.info(
+                f"QuizService: Session {session_id} is already ended (ended_at: {session.ended_at}). "
+                f"Proceeding directly to re-score."
+            )
+        else:
+            # First-time ending: Transition state to ended in the database
+            logger.info(f"QuizService: Marking session {session_id} as ended.")
+            await self.session_repo.mark_ended_session(session_id=session_id)
 
-        logger.info(f"Service: Session with session id: {session_id} ended successful")
-        return ending_session"""
-        
-
+        # Calculate metrics and build the final result profile
+        try:
+            result = await self.scoring_service.calculate_session_result(session_id=session_id)
+            return result
+            
+        except HTTPException:
+            raise
+            
+        except Exception as e:
+            logger.error(f"QuizService: Unexpected failure while calculating score profile for session {session_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Session closed successfully, but analytics calculation failed. Please retry."
+            )
