@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError  # Added to handle database unique constraints
+from sqlalchemy.exc import IntegrityError  
 
 from core.enums import Status
 from models.attempt import Attempt
