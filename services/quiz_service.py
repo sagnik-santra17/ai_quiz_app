@@ -13,6 +13,7 @@ from repositories.session_repository import SessionRepository
 from schemas.attempt_schema import AttemptCreate, AttemptResponse
 from schemas.session_schema import SessionCreate, SessionResult
 from services.question_service import QuestionService
+from services.scoring_service import ScoringService
 
 
 logger = logging.getLogger(__name__)
@@ -23,11 +24,13 @@ class QuizService:
         self,
         attempt_repo: AttemptRepository,
         session_repo: SessionRepository,
-        question_service: QuestionService
+        question_service: QuestionService,
+        scoring_service: ScoringService
     ):
         self.attempt_repo = attempt_repo
         self.session_repo = session_repo
         self.question_service = question_service
+        self.scoring_service = scoring_service
 
     # Private helper to fetch and validate an active session
     async def _get_active_session(self, session_id: uuid.UUID) -> Session:
