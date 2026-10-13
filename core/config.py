@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     MODEL_NAME: str = "gemini-3.8-flash"
     POOL_INTERVAL_SECONDS: int = 60
+    WORKER_ENABLED: bool = True
+    GROQ_API_KEY: str | None = None
+    LLM_MODEL: str = "openai/gpt-oss-120b"
 
     model_config = SettingsConfigDict(
         env_file=".env",

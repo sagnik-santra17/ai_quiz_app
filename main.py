@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 
@@ -10,6 +11,9 @@ from fastapi.responses import JSONResponse
 
 from core.database import async_engine
 from controllers.quiz_controller import router
+from workers.question_generator import run_worker
+from core.config import settings
+
 
 
 # ---------- Logging Setup (Both File and Console) ---------- #
@@ -42,7 +46,33 @@ logger.info("Application starting up... (visible in both console and file)")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown events: dispose database engine on exit."""
+
+    # STARTUP PHASE (Runs before yield)
+    worker_task = None
+
+    if settings.WORKER_ENABLED:
+        logger.info("Worker flag is ENABLED. Initializing background question generator...")
+        worker_task = asyncio.create_task(run_worker())
+
+    else:
+        logger.info("Worker flag is DISABLED. Background question pool refills are paused.")
+
     yield
+
+    # SHUTDOWN PHASE (Runs after yield, when the application turns off)
+    if worker_task:
+        logger.info("Stopping the question generator...")
+        worker_task.cancel()
+        logger.info("Question generator stopped.")
+
+        try:
+            # Await the task so it runs its own internal try/except cleanup block before python
+            await worker_task
+            logger.info("Question generator stopped successfully.")
+        except asyncio.CancelledError:
+            pass # Suppress the normal cancellation alert since we requested it
+
+
     await async_engine.dispose()
     logger.info("Database engine disposed.")
 

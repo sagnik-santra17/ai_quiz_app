@@ -57,6 +57,7 @@ async def run_worker():
                     if count < settings.POOL_THRESHOLD:
                         needed = settings.POOL_TARGET - count
                         logger.info(f"Worker: Generating {needed} questions for topic: {t} and level: {l}")
+                        await asyncio.sleep(20.0)
 
                         try:
                             prompt = build_prompt(t, l, needed)
