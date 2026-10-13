@@ -26,7 +26,7 @@ async def generate_structured_data(prompt: str, response_schema: type[BaseModel]
     try:
         # Use client.aio to yield control back to the FastAPI / Worker event loop
         response = await client.aio.models.generate_content(
-            model='gemini-3.8-flash',
+            model=settings.MODEL_NAME,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",

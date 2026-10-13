@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     CACHE_TTL_SECONDS: int = 3600
     RATE_LIMIT_PER_MINUTE: int = 30
     GEMINI_API_KEY: str
+    MODEL_NAME: str = "gemini-3.8-flash"
+    POOL_INTERVAL_SECONDS: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",

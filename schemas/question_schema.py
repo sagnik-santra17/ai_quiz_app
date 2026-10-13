@@ -15,9 +15,14 @@ class QuestionGenerated(BaseModel):
 
     @model_validator(mode='after')
     def check_answer_in_option(self) -> Self:
-        options = [self.answer1, self.answer2, self.answer3, self.answer4]
+        cleaned_options = [
+            str(ans).strip().lower() 
+            for ans in [self.answer1, self.answer2, self.answer3, self.answer4]
+            if ans is not None
+        ]
+        cleaned_correct = self.correct_answer.strip().lower()
         
-        if self.correct_answer.strip().lower() not in options:
+        if cleaned_correct not in cleaned_options:
             raise ValueError(
                 f"The correct_answer '{self.correct_answer}' must match one of the provided options."
             )
@@ -33,4 +38,8 @@ class QuestionResponse(BaseModel):
     answer2: str
     answer3: str
     answer4: str
+
+
+class QuestionBatch(BaseModel):
+    questions: list[QuestionGenerated]
 
