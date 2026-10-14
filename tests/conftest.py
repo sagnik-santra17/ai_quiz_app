@@ -1,3 +1,8 @@
+# Disable the background worker during tests so it doesn't touch the real database.
+import os
+os.environ["WORKER_ENABLED"] = "False"
+
+
 from httpx import ASGITransport, AsyncClient
 import pytest_asyncio
 import pytest
@@ -14,11 +19,11 @@ from main import app
 
 
 
-
 # Test async engine
 test_async_engine: AsyncEngine = create_async_engine(
     settings.TEST_DATABASE_URL,
 )
+
 
 # Test async session maker
 TestAsyncSessionLocal = async_sessionmaker(
@@ -37,6 +42,7 @@ async def setup_database():
     yield
     async with test_async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
 
 # # Throws a new DB session per test — rolled back at teardown so tests stay isolated
 @pytest_asyncio.fixture(scope="function")
