@@ -13,6 +13,7 @@ from core.database import async_engine
 from controllers.quiz_controller import router
 from workers.question_generator import run_worker
 from core.config import settings
+from core.redis import redis_client, rate_limiter
 
 
 
@@ -74,6 +75,7 @@ async def lifespan(app: FastAPI):
 
 
     await async_engine.dispose()
+    await redis_client.close()
     logger.info("Database engine disposed.")
 
 
@@ -131,8 +133,25 @@ async def add_security_headers(request: Request, call_next):
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
         "img-src 'self' data: https://fastapi.tiangolo.com;"
     )
-
     return response
+
+# Global rate limiting middleware
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    if not request.url.path.startswith("/quiz"):
+        return await call_next(request)
+
+    client_ip = request.client.host if request.client else "unknown"
+
+    try:
+        await rate_limiter.check_rate_limit(client_ip)
+    except HTTPException as exc:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail}
+        )
+
+    return await call_next(request)
 
 
 # ---------- Global Exception Handlers ---------- #

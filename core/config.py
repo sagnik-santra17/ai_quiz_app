@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     WORKER_ENABLED: bool = True
     GROQ_API_KEY: str | None = None
     LLM_MODEL: str = "openai/gpt-oss-120b"
+    REDIS_URL: str = "redis://localhost:6379"
+    TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:2026@localhost:5432/ai_quiz_app_test"
 
     model_config = SettingsConfigDict(
         env_file=".env",
