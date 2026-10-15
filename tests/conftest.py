@@ -2,10 +2,12 @@
 import os
 os.environ["WORKER_ENABLED"] = "False"
 
-
-from httpx import ASGITransport, AsyncClient
 import pytest_asyncio
 import pytest
+
+from httpx import ASGITransport, AsyncClient
+from unittest.mock import AsyncMock
+from sqlalchemy.pool import NullPool
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 from typing import AsyncGenerator
@@ -16,12 +18,14 @@ from models.session import Session
 from models.question import Question
 from models.attempt import Attempt
 from main import app
+import core.redis
 
 
 
 # Test async engine
 test_async_engine: AsyncEngine = create_async_engine(
     settings.TEST_DATABASE_URL,
+    poolclass=NullPool
 )
 
 
@@ -35,7 +39,7 @@ TestAsyncSessionLocal = async_sessionmaker(
 
 
 # Shared session-wide database schema setup
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="function", autouse=True)
 async def setup_database():
     async with test_async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -73,9 +77,31 @@ async def client(db_session):
     app.dependency_overrides.clear()
 
 
-# Automatically flushes the Redis cache before every single test execution
+"""# Automatically flushes the Redis cache before every single test execution
 @pytest_asyncio.fixture(autouse=True, scope="function")
 async def clear_redis():
-    from core.redis import redis_client
-    await redis_client.flushdb()
-    yield
+    yield"""
+
+
+# Mock Redis
+@pytest.fixture(autouse=True)
+def mock_redis_middleware():
+    """
+    Automatically mocks the global redis_client to prevent loop mismatches.
+    """
+    # Keep a reference to the original client to restore it later
+    original_client = core.redis.redis_client
+    
+    # Instantiate an asynchronous mock object
+    mock_client = AsyncMock()
+    
+    # Configure the 'incr' command to always return a low request count
+    mock_client.incr.return_value = 1
+    
+    # Dynamically hot-swap the real client with our mock
+    core.redis.redis_client = mock_client
+    
+    yield mock_client
+    
+    # Restore the original configuration after the test finishes
+    core.redis.redis_client = original_client
