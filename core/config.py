@@ -3,12 +3,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
 
-    APP_NAME: str = "AI QUIZ APP"
     DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379"
     POOL_THRESHOLD: int = 5
     POOL_TARGET: int = 10
-    CACHE_TTL_SECONDS: int = 3600
     RATE_LIMIT_PER_MINUTE: int = 30
     GEMINI_API_KEY: str
     MODEL_NAME: str = "gemini-3.8-flash"
@@ -16,8 +14,7 @@ class Settings(BaseSettings):
     WORKER_ENABLED: bool = True
     GROQ_API_KEY: str | None = None
     LLM_MODEL: str = "openai/gpt-oss-120b"
-    REDIS_URL: str = "redis://localhost:6379"
-    TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:2026@localhost:5432/ai_quiz_app_test"
+    TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/ai_quiz_app_test"
 
     model_config = SettingsConfigDict(
         env_file=".env",
