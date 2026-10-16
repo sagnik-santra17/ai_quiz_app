@@ -77,17 +77,12 @@ async def client(db_session):
     app.dependency_overrides.clear()
 
 
-"""# Automatically flushes the Redis cache before every single test execution
-@pytest_asyncio.fixture(autouse=True, scope="function")
-async def clear_redis():
-    yield"""
-
-
 # Mock Redis
 @pytest.fixture(autouse=True)
 def mock_redis_middleware():
     """
     Automatically mocks the global redis_client to prevent loop mismatches.
+    Tracks rate limit increments using a dynamic counter.
     """
     # Keep a reference to the original client to restore it later
     original_client = core.redis.redis_client
@@ -95,8 +90,18 @@ def mock_redis_middleware():
     # Instantiate an asynchronous mock object
     mock_client = AsyncMock()
     
-    # Configure the 'incr' command to always return a low request count
-    mock_client.incr.return_value = 1
+    # Track the request count across consecutive calls within the test session
+    counter = {"n": 0}
+    
+    def increment(*args, **kwargs):
+        counter["n"] += 1
+        return counter["n"]
+        
+    # Configure the 'incr' command with the dynamic callable counter
+    mock_client.incr.side_effect = increment
+    
+    # Ensure expire configuration is active during the test run
+    mock_client.expire.return_value = True
     
     # Dynamically hot-swap the real client with our mock
     core.redis.redis_client = mock_client

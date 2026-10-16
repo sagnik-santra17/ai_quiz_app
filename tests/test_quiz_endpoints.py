@@ -1,5 +1,6 @@
 import pytest_asyncio
-
+import uuid
+    
 from models.question import Question
 from tests.conftest import db_session
 
@@ -172,36 +173,125 @@ async def test_end_session_success(client, db_session):
 
 # Bad topic value → 422
 async def test_start_session_invalid_topic(client):
-    pass
+    invalid_data = {
+        "player_name": "Alex",
+        "level": "easy",
+        "topic": "invalid_topic_name_here"  # Invalid topic to trigger validation error
+    }
+    
+    response = await client.post("/quiz/", json=invalid_data)
+    assert response.status_code == 422
+
 
 # Bad level value → 422
 async def test_start_session_invalid_level(client):
-    pass
+    invalid_data = {
+        "player_name": "Alex",
+        "level": "random_level", # Invalid Level to trigger validation error
+        "topic": "geography"  
+    }
+    
+    response = await client.post("/quiz/", json=invalid_data)
+    assert response.status_code == 422
+
 
 # Random session_id → 404
 async def test_get_next_question_session_not_found(client):
-    pass
+
+    # Generate a random UUID to guarantee the session won't be found
+    random_sid = str(uuid.uuid4())
+    
+    response = await client.get(f"/quiz/{random_sid}/next")
+    assert response.status_code == 404
+
 
 # Empty pool for combo → 503
 async def test_get_next_question_pool_exhausted(client):
-    pass
+    # Start a fresh session with a unique combo that has no questions in the database
+    empty_pool_player = {
+        "player_name": "Alex",
+        "level": "easy",
+        "topic": "movies"
+    }
+    
+    session_response = await client.post("/quiz/", json=empty_pool_player)
+    assert session_response.status_code == 201
+    session_id = session_response.json()["session_id"]
+    
+    response = await client.get(f"/quiz/{session_id}/next")
+    assert response.status_code == 503
+
 
 # Random session_id → 404
 async def test_record_attempt_session_not_found(client):
-    pass
+    # Generate a random UUID to simulate a missing session context
+    random_sid = str(uuid.uuid4())
+    
+    # Package a dummy attempt payload
+    attempt_data = {
+        "question_id": str(uuid.uuid4()),
+        "selected_answer": "Any Answer"
+    }
+    
+    response = await client.post(f"/quiz/{random_sid}/attempts", json=attempt_data)
+    assert response.status_code == 404
+
 
 # Random question_id → 404
-async def test_record_attempt_question_not_found(client):
-    pass
+async def test_record_attempt_question_not_found(client, quiz_setup):
+    # Extract a real session ID from our setup package
+    session_id = quiz_setup["session_id"]
+    
+    # Generate a random UUID for the question to simulate a missing question item
+    random_qid = str(uuid.uuid4())
+    
+    attempt_data = {
+        "question_id": random_qid,
+        "selected_answer": "George Washington"
+    }
+    
+    response = await client.post(f"/quiz/{session_id}/attempts", json=attempt_data)
+    assert response.status_code == 404
 
 # Same question twice in session → 409
-async def test_record_attempt_duplicate(client):
-    pass
+async def test_record_attempt_duplicate(client, quiz_setup):
+    question_id = quiz_setup["question_id"]
+    session_id = quiz_setup["session_id"]
+    
+    attempt_data = {
+        "question_id": str(question_id),
+        "selected_answer": "George Washington"
+    }
+    
+    # First attempt: Successfully recorded (200 OK)
+    first_response = await client.post(f"/quiz/{session_id}/attempts", json=attempt_data)
+    assert first_response.status_code == 200
+    
+    # Second attempt: Duplicate submission for the same question triggers conflict rule
+    second_response = await client.post(f"/quiz/{session_id}/attempts", json=attempt_data)
+    assert second_response.status_code == 409
 
 # Random session_id → 404
 async def test_end_session_not_found(client):
-    pass
+    # Generate a random UUID to ensure the session context does not exist
+    random_sid = str(uuid.uuid4())
+    
+    response = await client.post(f"/quiz/{random_sid}/end")
+    assert response.status_code == 404
 
 # 31 requests in a minute → 429
 async def test_rate_limit_exceeded(client):
-    pass
+    player_payload = {
+        "player_name": "Alex",
+        "level": "easy",
+        "topic": "history"
+    }
+    
+    # Fire off 30 successful or allowed requests to hit the threshold limit
+    for _ in range(30):
+        response = await client.post("/quiz/", json=player_payload)
+        assert response.status_code in (201, 422)
+        
+    # The 31st request triggers the rate limiter rule
+    throttled_response = await client.post("/quiz/", json=player_payload)
+    assert throttled_response.status_code == 429
