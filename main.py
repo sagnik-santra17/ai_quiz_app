@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 
 from contextlib import asynccontextmanager
@@ -8,6 +9,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from core.database import async_engine
 from controllers.quiz_controller import router
@@ -189,6 +191,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 # ------ Appliation routers ------- #
 app.include_router(router) # -> Quiz controller
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 
 

@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Quiz App</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div id="start-screen">
+      <h1>Quiz App</h1>
+      <form id="start-form">
+        <label for="player-name">Player Name:</label>
+        <input type="text" id="player-name" name="player-name" required />
+        <label for="topic">Topic:</label>
+        <select id="topic" name="topic" required>
+          <option value="geography">Geography</option>
+          <option value="history">History</option>
+          <option value="current_affairs">Current Affairs</option>
+          <option value="movies">Movies</option>
+          <option value="food">Food</option>
+        </select>
+        <label for="level">Level:</label>
+        <select id="level" name="level" required>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button type="submit">Start</button>
+      </form>
+    </div>
+    <div id="quiz-screen" style="display: none">
+      <h1 id="question-topic"></h1>
+      <div id="question"></div>
+      <div id="answers"></div>
+      <button id="next-question" style="display: none">Next Question</button>
+      <button id="quit">Quit</button>
+    </div>
+    <div id="end-screen" style="display: none">
+      <h1>Your Results</h1>
+      <p id="result"></p>
+      <button id="play-again">Play Again</button>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

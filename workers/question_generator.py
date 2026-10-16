@@ -4,7 +4,7 @@ import logging
 from core.database import AsyncSessionLocal
 from core.enums import Levels, Topics
 from core.config import settings
-from core.gemini import QuestionGenerationFailed, generate_structured_data
+from core.llm import QuestionGenerationFailed, generate_structured_data
 from repositories.question_repository import QuestionRepository
 from schemas.question_schema import QuestionBatch
 from services.question_service import QuestionService
