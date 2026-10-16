@@ -1,0 +1,67 @@
+# ============================================================
+# docker-compose.yml — AI Quiz App
+# ============================================================
+# Brings up Postgres, Redis, and the FastAPI app together.
+# Runs Alembic migrations before starting the server.
+#
+# Local dev:  docker compose up --build
+# Prod-like:  docker compose -f docker-compose.yml up --build
+# ============================================================
+
+services:
+  db:
+    image: postgres:16
+    container_name: ai_quiz_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: ai_quiz_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: ai_quiz_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      WORKER_ENABLED: ${WORKER_ENABLED:-True}
+      POOL_THRESHOLD: ${POOL_THRESHOLD:-5}
+      POOL_TARGET: ${POOL_TARGET:-10}
+      POOL_INTERVAL_SECONDS: ${POOL_INTERVAL_SECONDS:-60}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-30}
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  postgres_data:

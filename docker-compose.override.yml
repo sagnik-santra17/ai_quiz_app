@@ -1,0 +1,17 @@
+# ============================================================
+# docker-compose.override.yml — Development overrides
+# ============================================================
+# Auto-merged with docker-compose.yml when running `docker compose up`.
+# Adds dev-only conveniences:
+#   - Live code mount (.:/app) so changes appear instantly
+#   - --reload flag to auto-restart the server on code changes
+#
+# For production, use:
+#   docker compose -f docker-compose.yml up
+# ============================================================
+
+services:
+  app:
+    volumes:
+      - .:/app
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"

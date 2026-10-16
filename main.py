@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from core.database import async_engine
@@ -198,4 +198,4 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 # ------ Root Endpoint ------ #
 @app.get("/")
 async def root():
-    return {"message": "Welcome AI Quiz App!"}
+    return RedirectResponse(url="/static/index.html")
