@@ -58,7 +58,8 @@ async def run_async_migrations() -> None:
         section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"ssl": "require"}
+        connect_args={"ssl": "require"},
+        pool_pre_ping=True,
     )
 
     async with connectable.connect() as connection:
