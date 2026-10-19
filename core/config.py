@@ -20,7 +20,6 @@ class Settings(BaseSettings):
         env_file=".env",
         extra="ignore",
         env_file_encoding="utf-8",
-        connect_args={"ssl": True}
     )
 
 settings = Settings()

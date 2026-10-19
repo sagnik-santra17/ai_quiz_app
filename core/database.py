@@ -16,7 +16,8 @@ async_engine = create_async_engine(
     settings.DATABASE_URL,
     pool_size=5,
     max_overflow=10,
-    echo=False  
+    echo=False,
+    connect_args={"ssl": "require"} 
 )
 
 
