@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",
-        env_file_encoding="utf-8"
+        env_file_encoding="utf-8",
+        connect_args={"ssl": True}
     )
 
 settings = Settings()
