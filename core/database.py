@@ -17,7 +17,7 @@ async_engine = create_async_engine(
     pool_size=5,
     max_overflow=10,
     echo=False,
-    connect_args={"ssl": "require"},
+    connect_args={"ssl": "require"} if settings.DB_SSL else {},
     pool_pre_ping=True, 
 )
 

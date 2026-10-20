@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     MODEL_NAME: str = "gemini-3.8-flash"
     POOL_INTERVAL_SECONDS: int = 60
     WORKER_ENABLED: bool = True
+    DB_SSL: bool = False
     GROQ_API_KEY: str | None = None
     LLM_MODEL: str = "openai/gpt-oss-120b"
     TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/ai_quiz_app_test"

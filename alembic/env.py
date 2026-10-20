@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# 1. Imported your application configuration settings object
 from core.config import settings  
 from core.database import Base
 from models.session import Session
@@ -58,7 +57,8 @@ async def run_async_migrations() -> None:
         section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={"ssl": "require"},
+        # SSL is only required for hosted databases (e.g. Render). Controlled by DB_SSL.
+        connect_args={"ssl": "require"} if settings.DB_SSL else {},
         pool_pre_ping=True,
     )
 
