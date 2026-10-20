@@ -25,4 +25,4 @@ COPY . .
 
 # Run migrations, then start the server.
 # Shell form is required so ${PORT:-8000} expands at runtime.
-CMD alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips="*"
