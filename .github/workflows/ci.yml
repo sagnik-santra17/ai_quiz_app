@@ -26,6 +26,8 @@ jobs:
         env:
           GEMINI_API_KEY: "fake-key-for-testing"
           GROQ_API_KEY: "fake-key-for-testing"
+          DATABASE_URL: "postgresql+asyncpg://user:password@localhost:5432/testdb"
+          REDIS_URL: "redis://localhost:6379/0"
         run: python -m pytest
 
       - name: Deploy to Render
